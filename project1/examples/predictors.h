@@ -6,7 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-
+#include <algorithm>
 void alwaysTaken(unsigned long long , std::string , unsigned long long , int &);
 void alwaysNonTaken(unsigned long long , std::string , unsigned long long , int &);
 void predictor();
@@ -152,5 +152,73 @@ public:
         this->correct = this->table.correct;
         return prediction;
     }
+};
+
+class Tournament{
+public:
+    GShare GS;
+    Bimodal BM;
+    int correct;
+    std::vector<int> table;
+    Tournament(){
+        this->correct = 0;
+        this->GS = GShare(11);
+        this->BM = Bimodal(2048, 1);
+        this->table = std::vector<int>(2048, 0);
+    }
+    int checkTable(unsigned long long address, std::string behavior){
+        int index = address%2048;
+        //check and modify table
+        // 0 = Strong GS, 1 = Weak GS, 2 = Weak BM, 3 = Strong BM
+        /* Returns the Prediction based on the following:
+        *  -1 = err
+        *  1 = Taken
+        *  0 = Non Taken
+        */
+        int gsharePrediction = GS.checkTable(address, behavior);
+        int bimodalPrediction = BM.checkTable(address, behavior);
+        int change = 0;
+        if(gsharePrediction!=bimodalPrediction){
+            //std::cout<<"not same"<<std::endl;
+            change = 1; //if 1, change the state; else dont change state of table
+        }
+        //else std::cout<<"same"<<std::endl;
+        int retval = -1;
+        //0/1->prefer gshare; 2/3 -> prefer bimodal
+        if(table[index] < 2){
+            retval = gsharePrediction;
+        }
+        else if(table[index] >= 2){
+            retval = bimodalPrediction;
+        }
+        else std::cout<<"err"<<std::endl;
+        if(retval == -1 || bimodalPrediction == -1 || gsharePrediction == -1) return -1;
+        if(change){
+            //gshare predicts correctly, bimodal incorrect
+            if((gsharePrediction == 1 && behavior == "T") || (gsharePrediction == 0 && behavior == "NT")){
+                table[index] -= 1;//Move towards favoring gshare
+                if(table[index] < 0) table[index] = 0;
+            }
+            //bimodal predicts correctly, gshare incorrect
+            else if ((bimodalPrediction == 1 && behavior == "T") || (bimodalPrediction == 0 && behavior == "NT")){
+                table[index] += 1;
+                if(table[index] > 3) table[index] = 3;
+            }
+        }
+        //update correct
+        if((retval == 1 && behavior == "T") || (retval == 0 && behavior == "NT")) {this->correct++;}
+        else std::cout<<"wrong"<<std::endl;
+        return retval;
+        /*
+            For some reason, every prediction is correct but there are changes occuring (i.e. one is wrong)
+            check comparison logic for change
+            check values in index
+
+
+        */
+    }
+    
+
+
 };
 #endif

@@ -54,6 +54,9 @@ void predictor(){
     }
     //3 Bits to 11 Bits
     /*********************************************************************/
+    //TOURNAMENT
+    Tournament tournamentPredictor = Tournament();
+    /*********************************************************************/
     //Predictions
     ifstream infile(INPUTFILEPATH);
     int branches = 0;
@@ -70,12 +73,10 @@ void predictor(){
         }
         
         for(int i = 0; i < 9; i++){
-             GShares[i].checkTable(address, behavior);
+            if(GShares[i].checkTable(address, behavior) == -1) break;
         }
         
-
-
-        
+        if(tournamentPredictor.checkTable(address, behavior) == -1) break;
     }
     /*********************************************************************/
     //OUTPUT
@@ -99,7 +100,8 @@ void predictor(){
             f <<GShares[i].correct << ","<< branches << "; ";
         } 
         f << GShares[8].correct << ","<< branches << ";"<<endl;
-        
+        //Tournament
+        f << tournamentPredictor.correct << ","<< branches << ";"<<endl;
     }
     f.close();
 }
