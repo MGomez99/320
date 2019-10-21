@@ -13,7 +13,7 @@ $(file1).o: $(file1).h $(file1).cpp
 clean:
 	rm -rf *.o
 	rm $(target)
-
+	rm test_output.txt
 run: all
 	./$(target)
 memcheck: all
@@ -22,3 +22,4 @@ memcheck: all
 winclean:
 	del *.o
 	del $(target).exe
+	del test_output.txt
