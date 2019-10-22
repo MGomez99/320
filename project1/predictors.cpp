@@ -1,6 +1,6 @@
 #include "predictors.h"
-#define INPUTFILEPATH "traces/short_trace2.txt"
-#define OUTPUTFILEPATH "test_output.txt"
+#define INPUTFILEPATH "traces/short_trace1.txt"
+#define OUTPUTFILEPATH "output.txt"
 using namespace std;
 
 void alwaysTaken(unsigned long long address, string behavior, unsigned long long target, int &correct){
@@ -21,7 +21,7 @@ void alwaysNonTaken(unsigned long long address, string behavior, unsigned long l
     else{cout << "err with parse"<<endl;}
 }
 
-int predictor(){
+int predictor(string inputfile, string outputfile){
     /*********************************************************************/
     //Parsing Variables
     unsigned long long address = 0;
@@ -58,10 +58,18 @@ int predictor(){
     //TOURNAMENT
     Tournament tournamentPredictor = Tournament();
     /*********************************************************************/
+    //BTB
+    BTB branchTargetBuffer = BTB();
+    /*********************************************************************/
     //Predictions
-    ifstream infile(INPUTFILEPATH);
+    ifstream infile(inputfile);
+    ofstream f(outputfile);
     if(!infile){
-        cout<< " File not found; Update INPUTFILEPATH in predictors.cpp appropriately" << endl;
+        cout<< "Input file not found" << endl;
+        return -1;
+    }
+    if(!f){
+        cout<< "Output File can't be created" << endl;
         return -1;
     }
     int branches = 0;
@@ -84,10 +92,11 @@ int predictor(){
         }
         
         if(tournamentPredictor.checkTable(address, behavior) == -1) break;
+        if(branchTargetBuffer.checkTable(address, behavior, target) == -1) break;
     }
     /*********************************************************************/
     //OUTPUT
-    ofstream f(OUTPUTFILEPATH);
+    
     if(f){
         //Always Taken / Always Non Taken
         f << atpredictions <<","<< branches << ";"<< endl;
@@ -109,11 +118,12 @@ int predictor(){
         f << GShares[8].correct << ","<< branches << ";"<<endl;
         //Tournament
         f << tournamentPredictor.correct << ","<< branches << ";"<<endl;
+        f << branchTargetBuffer.accesses<<","<<branchTargetBuffer.hits<<";"<<endl;
     }
     f.close();
     return 0;
 }
 
 int main(int argc, char *argv[]){
-    return predictor();
+    return predictor(argv[1], argv[2]);
 }

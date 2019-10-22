@@ -7,6 +7,7 @@
 #include <sstream>
 #include <vector>
 #include <algorithm>
+#include <utility>
 void alwaysTaken(unsigned long long , std::string , unsigned long long , int &);
 void alwaysNonTaken(unsigned long long , std::string , unsigned long long , int &);
 int predictor();
@@ -151,10 +152,11 @@ public:
         *  1 = Taken
         *  0 = Non Taken
         */
-        unsigned long long index = (address ^ stoi(history_register, nullptr, 2)); //xor address with register to get index
+        unsigned long long index = address % 2048;
+        index = (address ^ stoi(history_register, nullptr, 2)); //xor address with register to get index
         int prediction = this->table.checkTable(index, behavior);
         // if branch taken, shift left and store a 1, else 0
-        history_register = history_register.substr(1, history_register.size()-1);
+        history_register = history_register.substr(1, this->history_bits-1);
         if(behavior == "T"){
             history_register.append("1");
         }else{
@@ -175,14 +177,14 @@ public:
         this->correct = 0;
         this->GS = GShare(11);
         this->BM = Bimodal(2048, 2);
-        this->table = std::vector<int>(2048, 0);
+        this->table = std::vector<int>(2048, 00);
         this->tablesize = 2048;
     }
     int checkTable(unsigned long long address, std::string behavior){
         unsigned long long index = address % tablesize;
-        int branchTaken = 0;
-        if(behavior == "T"){
-            branchTaken = 1;
+        int branchTaken = 1;
+        if(behavior == "NT"){
+            branchTaken = 0;
         }
         //check and modify table
         // 0 = Strong GS, 1 = Weak GS, 2 = Weak BM, 3 = Strong BM
@@ -193,53 +195,96 @@ public:
         */
         int gsharePrediction = this->GS.checkTable(address, behavior);
         int bimodalPrediction = this->BM.checkTable(address, behavior);
+        if(gsharePrediction == -1 || bimodalPrediction == -1){
+            std::cout<<"one subpredictor is returning negative in tournament predictor"<<std::endl;
+            return -1;
+        }
         int prediction = -1;
-        //select gshare
+        // choice is the selector: 0/1->gshare; 2/3->bimodal
         int & choice = this->table[index];
-        if(choice < 2){
+        /*          SAME PREDICTION            */
+        if(bimodalPrediction == gsharePrediction){
+            //check if prediction is correct
+            if(bimodalPrediction == branchTaken){
+                this->correct++;
+                return bimodalPrediction;
+            }
+            else{
+                return bimodalPrediction;
+            }
+        }
+        //     ***If not same, one must be wrong***
+        //select gshare
+        else if(choice < 2){
             prediction = gsharePrediction;
             //gshare makes correct prediction
             if(gsharePrediction == branchTaken){
                 this->correct++;
                 //incorrect bimodal prediction
-                if(bimodalPrediction != branchTaken){
-                    choice--;
-                }
+                if(choice > 0){choice--;}  
             }
             //gshare makes incorrect prediction
             else{
-                //bimodal makes correct prediction
-                if(bimodalPrediction == branchTaken){
-                    if(choice < 3){
-                        choice++;
-                    }
-                }
+                //bimodal must be correct (increment)
+                choice++;
+
             }
         }
         //select bimodal
-        else{
+        else if (choice >= 2){
             prediction = bimodalPrediction;
-            //if bimodal is correct
+            //bimodal makes correct prediction
             if(bimodalPrediction == branchTaken){
                 this->correct++;
-                //if gshare is wrong
-                if(gsharePrediction != branchTaken){
-                    if(choice < 3){
-                        choice++;
-                    }
-                }
+                //gshare must be wrong
+                if(choice < 3){choice++;}
             }
-            //if bimodal is wrong
+            //bimodal makes incorrect prediction
             else{
-                //if gshare correct
-                if(gsharePrediction == branchTaken){
-                    if(choice > 0){
-                        choice--;
-                    }
-                }
+                //gshare must be correct (decrement)
+                choice--;
             }
+        }else{
+            std::cout<<"choice out of bounds in tournament predictor"<<std::endl;
         }
         return prediction;
     }
+};
+
+class BTB{
+public:
+    Bimodal BM;
+    std::vector<std::pair<unsigned long long, unsigned long long>> btb;
+    int btbSize;
+    int accesses;
+    int hits;
+    BTB(){
+        this->BM = Bimodal(512, 1);
+        this->btb = std::vector<std::pair<unsigned long long, unsigned long long>> (128, std::make_pair(0, 0));
+        this->btbSize = 128;
+        this->accesses = 0;
+        this->hits = 0;
+    }
+    int checkTable(unsigned long long address, std::string behavior, unsigned long long target){
+        int branch_taken_prediction = this->BM.checkTable(address, behavior);
+        //if prediction is taken, read from BTB
+        if(branch_taken_prediction == 1){
+            this->accesses++;
+            std::pair<unsigned long long, unsigned long long> & entry = this->btb[address % btbSize];
+            //miss
+            if(entry.first != address){
+                //update entry
+                entry = std::make_pair(address, target);
+            }//hit
+            else{
+                if(entry.second == target){
+                    this->hits++;
+                }
+            }
+            
+        }//predict non taken, dont read
+        return branch_taken_prediction;
+    }
+
 };
 #endif

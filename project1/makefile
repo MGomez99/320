@@ -22,4 +22,4 @@ memcheck: all
 winclean:
 	del *.o
 	del $(target).exe
-	del test_output.txt
+	del output.txt
