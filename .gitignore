@@ -1,2 +1,6 @@
 .vscode
+/project1/traces/
 /project1/traces/*
+/project1/correct_outputs/
+/project1/correct_outputs/*
+/project1/sample_output.txt
