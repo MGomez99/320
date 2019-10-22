@@ -13,7 +13,7 @@ $(file1).o: $(file1).h $(file1).cpp
 clean:
 	rm -rf *.o
 	rm $(target)
-	rm test_output.txt
+	rm output.txt
 run: all
 	./$(target)
 memcheck: all
