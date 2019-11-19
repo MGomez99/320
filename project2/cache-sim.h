@@ -4,13 +4,14 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <sstream>
 #include <vector>
 #include <algorithm>
 #include <utility>
 #include <cmath>
 
-#define NUM_BITS 32
-#define NUM_BLOCKS 32
+#define BLOCKSIZE 32
+using namespace std;
 
 /*
 //example from class
@@ -34,71 +35,122 @@ tag = (address / blocks) / entries
 = 9 / 2
 = 4 binary: 100
 */
+/***************************************/
+/*               structs               */
+/***************************************/
 struct trace{
-  unsigned long long target;
-  std::string instruction;
   
+  unsigned long long target;
+  string instruction;
+  trace(unsigned long long tg, string instr): target(tg), instruction(instr){}
+  trace(){target = 0; instruction = "";}
 };
 struct Block{
-  unsigned valid_bit;
-  unsigned long long tag;
-  unsigned dirty_bit;
-};v
-struct Cache{
-  int hits, misses,writes, reads, cache_size, block_size, entries, line_size;
-  std::vector<Block> blocks;
+  unsigned valid_bit = 0;
+  unsigned long long tag = 0;
+  Block(unsigned valid, unsigned long long tg): valid_bit(valid), tag(tg) {}
+  Block(){valid_bit = 0; tag = 0;}
 };
-int log2(int n){
-  return (int) (log(n)/log(2));
-}
-std::vector<trace> parseFile(std::string inputfile, std::string outputfile){
-  std::vector<trace> traces;
-  unsigned long long tg = 0;
-  std::string instr;
-  std::ifstream infile(inputfile);
-  std::ofstream outfile(outputfile);
-  if(!infile){
-    std::vector<trace> empty;
-    std::cout<< "Input file not found" << std::endl;
-    return empty;
+
+class Cache{
+  public:
+  int hits, misses, accesses, cache_size, entries;
+  vector<Block> table;
+  Cache(){
+    hits = 0, misses = 0, accesses  = 0, cache_size = 0, entries = 0;
+    table.resize(0);
   }
-  if(!outfile){
-    std::vector<trace> empty;
-    std::cout<< "Output File can't be created" << std::endl;
+ 
+};
+/***************************************/
+/***************************************/
+
+/***************************************/
+/*                misc.                */
+/***************************************/
+//int log2(int n){
+  //return (int) (log(n)/log(2));
+//}
+/***************************************/
+/***************************************/
+vector<trace> parseFile(string inputfile, string outputfile){
+  vector<trace> traces;
+  unsigned long long tg = 0;
+  string instr;
+  ifstream infile(inputfile);
+
+  if(!infile){
+    vector<trace> empty;
+    cout<< "Input file not found" << endl;
     return empty;
   }
 
-  while(infile >> instr >> std::hex >> t5g){
+  string line;
+  while(getline(infile, line)){
+    stringstream s(line);
+    s >> instr >> hex >> tg;
     struct trace temp;
     temp.target = tg;
     temp.instruction = instr;
     traces.push_back(temp);    
   }
+  infile.close();
   return traces;
 }
 
 class DM_Cache{
-  struct Cache* cache;
+  public:
+  Cache* cache;
   //number of bits for offset, index, and tag
-  int size_offset;
-  int size_index;
-  int size_tag;
+  int size_offset = 0;
+  int size_index = 0;
+  int size_tag = 0;
   
-  DM_Cache(int c_size, int l_size){
+  DM_Cache(int c_size){
+    cache = new Cache();
     cache->cache_size = c_size;
-    cache->line_size = l_size;
-    cache->hits = cache->misses = cache->writes = cache->reads = 0;
-    size_offset = log2(l_size);
+    size_offset = 5; //log2(32)
     size_index = log2(c_size);
-    tag = NUM_BITS - size_offset - size_index;
-    cache->blocks.resize(c_size);
-    //@TODO initiallize blocks to #[c_size] empty structs
-    cache->entries = cache_size / NUM_BLOCKS;
-  }
-  DM_Cache(){}
-  void updateCache(struct trace t){
-    int idx = (t->target / NUM_BLOCKS) % cache->entries;
     
+    size_tag = 32 - 5 - size_index;
+    cache->table.resize(c_size);
+    cache->entries = cache->cache_size / 32;
+  }
+  DM_Cache(){
+    cache = new Cache();
+  }
+  ~DM_Cache(){
+    delete cache;
+  }
+  void updateCache(struct trace t){
+    if(t.target == 0){
+      cout << "0 address" << endl;
+      return;
+    }
+    //calculate tag and index
+    int idx = (t.target >> 5) % cache->entries; // index = address/block size % entries
+    int tag_t = t.target >> size_offset + size_index; //tag = address >> offsetbits
+    cout << "Target "<< t.target << " Instr: " << t.instruction <<" Index: " <<idx << " Tag: " << tag_t<< endl;
+    //index into table
+    Block & current = cache->table[idx];
+    cout<< " Current Tag: " << current.tag << " Valid: " << current.valid_bit<<endl;
+    cache->accesses++;
+    //line/block not valid
+    if(current.valid_bit == 0){
+      cout << " bit isnt valid" << endl;
+      cache->misses ++;
+      current.valid_bit = 1;
+      current.tag = tag_t;
+    }//block is valid, but tag doesn't match
+    else if (current.tag != tag_t){
+      cout << " tag doesnt match" << endl;
+      cache->misses++;
+      current.tag = tag_t;
+    }//tag matches
+    else{
+      cout << " hit!" << endl;
+      cache->hits++;
+    }
   }
 
 };
