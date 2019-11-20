@@ -73,10 +73,10 @@ string set_associative(int set_size, vector<trace> traces, int write_miss = 0, i
     unsigned tag = index >> size_index;
     Set & currentSet = table[current_set_number];
 
-    if(inSet(currentSet, t.target)){
+    if(inSet(currentSet, tag)){
       //cout << "hit!" <<endl;
       hits++;
-      incrementLRUCounters(currentSet, t.target);
+      incrementLRUCounters(currentSet, tag);
       if(env_setting == 2){
         //prefetch next line always (env setting 2)
 
@@ -88,15 +88,15 @@ string set_associative(int set_size, vector<trace> traces, int write_miss = 0, i
       //normal miss, fetch line
       if(env_setting == 0 || env_setting == 1){
         //if no alloc on write miss is set, we can't write on store instructions
-        if(env_setting == 0 || t.instruction != "S") fetchLine(currentSet, t.target);
+        if(env_setting == 0 || t.instruction != "S") fetchLine(currentSet, t.target, tag);
       }
       //next line prefetching is enabled
       else {
-        fetchLine(currentSet, t.target);
+        fetchLine(currentSet, t.target, tag);
         //@TODO fetch next line
       }
      
-      incrementLRUCounters(currentSet, t.target);
+      incrementLRUCounters(currentSet, tag);
     }
     
     

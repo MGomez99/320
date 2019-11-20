@@ -62,15 +62,15 @@ string IntToString(int a)
   return temp.str();
 }
 
-bool inSet(Set s, unsigned long long target){
+bool inSet(Set s, unsigned long long tag){
   if(shift_amnt_SA == 0) cout <<"ERR"<<endl;
   for(Block b : s.set){
-    if(b.tag << shift_amnt_SA == target << shift_amnt_SA) return true;
+    if(b.tag == tag) return true;
   }
   return false;
 }
 
-unsigned indexToEvict(Set s, unsigned long long target){
+unsigned indexToEvict(Set s, unsigned long long tag){
   int flag = 0;
   unsigned index_LRU = -1;
   int highest_count = -1;
@@ -78,46 +78,42 @@ unsigned indexToEvict(Set s, unsigned long long target){
     if(s.set[i].valid_bit == 0) return i;
     //find first possible eviction candidate
     if(!flag){
-      if(s.set[i].tag << shift_amnt_SA != target << shift_amnt_SA){
+      if(s.set[i].tag != tag){
         flag = 1;
         index_LRU = i;
         highest_count = s.set[index_LRU].count;
       }
     }
     //find a more qualified candidate (can't be the index containing the current instruction's target's tag [useful for prefetching])
-    else if(s.set[i].count > highest_count && s.set[i].tag != target){
+    else if(s.set[i].count > highest_count && s.set[i].tag != tag){
       index_LRU = i;
       highest_count = s.set[index_LRU].count;
     }
   }
   return index_LRU;
 }
-void incrementLRUCounters(Set & s, unsigned long long target, unsigned long long prefetch = 0){
-  //cout<< "++ size of s is "<< s.set.size()<<"/ " << s.size <<"...";
-  int flag = 0;
+void incrementLRUCounters(Set & s, unsigned long long tag, unsigned long long prefetch = 0){
   if(prefetch == 0){
     for(int i = 0; i < s.set.size(); i++){
       
-      if(s.set[i].tag == target){
-        //cout<<"...target! index is "<<i <<"...";
-        flag = 1;
+      if(s.set[i].tag == tag){
+
         s.set[i].count = 0;
       }
       else{
-        //if(flag) cout<< "...kept going...";
         s.set[i].count++;
       }
     }
   }
-  //cout<<"...done"<<endl;//@TODO increment on prefetch [account for prefetched line]
 }
 
-void fetchLine(Set & s, unsigned long long target, unsigned long long prefetch = 0){
+void fetchLine(Set & s, unsigned long long target, unsigned long long tag, unsigned long long prefetch = 0){
   //fetches line on a miss / prefetches too; sets counters to 0 for LRU
   if(prefetch == 0){
-    int index = indexToEvict(s, target);
+    int index = indexToEvict(s, tag);
     s.set[index].count = 0;
-    s.set[index].tag = target;
+    s.set[index].tag = tag;
+    s.set[index].target = target;
     s.set[index].valid_bit = 1;
   }//@TODO prefetching
 }
