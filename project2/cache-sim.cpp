@@ -57,7 +57,6 @@ string set_associative(int set_size, vector<trace> traces, int write_miss = 0, i
   cout<< "cache size: " << cache_size << " num sets: " << num_sets << " entries per set: " << entries_per_set << " "<<endl;
   //for output
   int hits = 0, misses = 0, accesses = 0;
-  shift_amnt_SA = size_index + size_offset;
   //cache will be represented by a vector of sets, each set contains n entries where n = set_size
   vector<Set> table(num_sets, Set(set_size));
   

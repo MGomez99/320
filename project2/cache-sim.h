@@ -11,7 +11,6 @@
 #include <cmath>
 
 using namespace std;
-int shift_amnt_SA = 0;
 
 /***************************************/
 /*               structs               */
