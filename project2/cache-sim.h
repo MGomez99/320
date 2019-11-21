@@ -10,7 +10,10 @@
 #include <utility>
 #include <cmath>
 
-using namespace std;
+#define ROUND_AVG(x,y)  ((x+y)/2)
+#define ROUND_POS(x)  (2*(x/2))
+
+using namespace std; //lazy
 
 /***************************************/
 /*               structs               */
@@ -26,9 +29,9 @@ struct Block{
   unsigned valid_bit = 0;
   unsigned long long tag = 0;
   unsigned count = 0;
- unsigned long long target = 0;
-  Block(unsigned valid, unsigned long long tg, unsigned ct = 0, unsigned long long trg = 0): valid_bit(valid), tag(tg), count(ct), target(trg){}
-  Block(){valid_bit = 0, tag = 0, count = 0, target = 0;} //removed 0s
+  unsigned long long target = 0;
+  Block(unsigned valid, unsigned long long tg, unsigned ct = 0, unsigned long long trg = 0, unsigned h = 0): valid_bit(valid), tag(tg), count(ct), target(trg), {}
+  Block(){valid_bit = 0, tag = 0, count = 0, target = 0;} 
 };
 
 struct Set{
@@ -37,7 +40,7 @@ struct Set{
   vector <Block> set;
   Set(unsigned s){
     size = s;
-    ptr = new vector<Block>(s, Block(0, 0, 0));
+    ptr = new vector<Block>(s, Block(0, 0, 0, 0));
     set = *ptr;
     
   }
@@ -47,8 +50,6 @@ struct Set{
   ~Set(){ delete &ptr;}
 
 };
-/***************************************/
-/***************************************/
 
 /***************************************/
 /*                misc.                */
@@ -62,7 +63,6 @@ string IntToString(int a)
 }
 
 bool inSet(Set s, unsigned long long tag){
-  if(shift_amnt_SA == 0) cout <<"ERR"<<endl;
   for(Block b : s.set){
     if(b.tag == tag) return true;
   }
@@ -91,32 +91,28 @@ unsigned indexToEvict(Set s, unsigned long long tag){
   }
   return index_LRU;
 }
-void incrementLRUCounters(Set & s, unsigned long long tag, unsigned long long prefetch = 0){
-  if(prefetch == 0){
-    for(int i = 0; i < s.set.size(); i++){
-      
-      if(s.set[i].tag == tag){
-
-        s.set[i].count = 0;
-      }
-      else{
-        s.set[i].count++;
-      }
+void incrementLRUCounters(Set & s, unsigned long long tag){
+  for(int i = 0; i < s.set.size(); i++){
+    if(s.set[i].tag == tag){
+      s.set[i].count = 0;
+    }
+    else{
+      s.set[i].count++;
     }
   }
 }
 
-void fetchLine(Set & s, unsigned long long target, unsigned long long tag, unsigned long long prefetch = 0){
-  //fetches line on a miss / prefetches too; sets counters to 0 for LRU
-  if(prefetch == 0){
-    int index = indexToEvict(s, tag);
-    s.set[index].count = 0;
-    s.set[index].tag = tag;
-    s.set[index].target = target;
-    s.set[index].valid_bit = 1;
-  }//@TODO prefetching
+void fetchLine(Set & s, unsigned long long target, unsigned long long tag){
+  //fetches line on a miss ; sets counters to 0 for LRU
+  int index = indexToEvict(s, tag);
+  s.set[index].count = 0;
+  s.set[index].tag = tag;
+  s.set[index].target = target;
+  s.set[index].valid_bit = 1;
+
 }
 /***************************************/
+/*                 I/O                 */
 /***************************************/
 vector<trace> parseFile(string inputfile, string outputfile){
   vector<trace> traces;
@@ -126,7 +122,7 @@ vector<trace> parseFile(string inputfile, string outputfile){
 
   if(!infile){
     vector<trace> empty;
-    cout<< "Input file not found" << endl;
+    std::cout<< "Input file not found" << endl;
     return empty;
   }
 
@@ -146,12 +142,20 @@ vector<trace> parseFile(string inputfile, string outputfile){
 int writeResults(vector<string> output, string outputfile){
   ofstream outfile(outputfile);
   if(!outfile){
-    cout<< "Output File can't be created" << endl;
+    std::cout<< "Output File can't be created" << endl;
     return -1;
   }
   for(string l : output) outfile << l << endl;
   outfile.close();
   return 0;
 }
+/***************************************/
+/*                caches               */
+/***************************************/
+string direct(int , vector<trace> );
+string set_associative(int , vector<trace> , int , int );
+string fully_associativeHC(int , vector<trace> );
+
+int cache_sim(string , string );
 
 #endif
