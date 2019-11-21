@@ -227,7 +227,6 @@ string fully_associativeHC(int set_size, vector<trace> traces){
     }
    
   }
-  cout << "DONE!" << endl;
   return IntToString(hits)+","+IntToString(accesses)+";";
 }
 
@@ -252,7 +251,7 @@ int cache_sim(string inputfile, string outputfile){
   string l5 = "";
   string l6 = "";
   string l7 = "";
-  //@TODO L5 L6
+  
   int sa_ways[4] = {2, 4, 8, 16};
   for(int i = 0; i < 4; i++){
     l2.append(set_associative(sa_ways[i], traces, 0)); //Standard Set Associative
@@ -268,20 +267,22 @@ int cache_sim(string inputfile, string outputfile){
   }
   output.push_back(l2);
   /**************************/
-  std::cout << "Fully Associative"<<endl;
-  /** FULLY ASSOCIATIVE CACHE **/
+
+  /** FULLY ASSOCIATIVE CACHE **/  
+  std::cout << "Fully Associative LRU"<<endl;
   string l3 = "";
   l3.append(set_associative(0, traces, 0, 1));
+
+  std::cout << "Fully Associative Pseudo LRU"<<endl;
   string l4 = "";
   l4.append(set_associative(0, traces, 0, 2));
-  //@TODO
   output.push_back(l3);
   output.push_back(l4);
   /**************************/
   output.push_back(l5);
   output.push_back(l6);
   output.push_back(l7);
-
+  cout << "DONE!" << endl;
   return writeResults(output, outputfile);
    
 }

@@ -30,7 +30,7 @@ struct Block{
   unsigned long long tag = 0;
   unsigned count = 0;
   unsigned long long target = 0;
-  Block(unsigned valid, unsigned long long tg, unsigned ct = 0, unsigned long long trg = 0, unsigned h = 0): valid_bit(valid), tag(tg), count(ct), target(trg), {}
+  Block(unsigned valid, unsigned long long tg, unsigned ct = 0, unsigned long long trg = 0, unsigned h = 0): valid_bit(valid), tag(tg), count(ct), target(trg) {}
   Block(){valid_bit = 0, tag = 0, count = 0, target = 0;} 
 };
 
