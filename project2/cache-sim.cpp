@@ -173,14 +173,12 @@ string fully_associativeHC(int set_size, vector<trace> traces){
 
     //will keep track of the target index on hits 
     int ind_in_arr = 0;
-    bool hit = false;
+    int cache_hit = 0;
     accesses++;
     //check if it's a hit or not
     for(int i = 0; i < cache.size(); i++){
       if(cache[i] == tag){
-        hit = true;
-        hits++;
-        ind_in_arr = i; //keep track of index in cache
+        cache_hit = 1; hits++; ind_in_arr = i; //keep track of index in cache
         break;
       }
     }
@@ -189,7 +187,7 @@ string fully_associativeHC(int set_size, vector<trace> traces){
     int upper_index = total_entries -1;
     int current_index = ROUND_AVG(upper_index, lower_index); 
     /* MISS CASE */
-    if(hit == false){
+    if(cache_hit == 0){
       //traverse the HC table, updating the bits
       //current_index will eventually hold where to store new line into cache
       while(current_index %2){
@@ -222,8 +220,10 @@ string fully_associativeHC(int set_size, vector<trace> traces){
         else{upper_index = current_index; HCTable[current_index] = 0;}// set the right side to be cold
         current_index = ROUND_AVG(upper_index, lower_index); // new middle index keeps changing untilwe're at the target
       }
+      //reset
       HCTable[current_index] = ind_in_arr - current_index; //to properly set val, offset by size of HC ARR
-      cache[ind_in_arr] = tag;
+      cache[ind_in_arr] = tag; //@DEBUG needed?
+
     }
    
   }
