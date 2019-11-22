@@ -1,5 +1,5 @@
 #include "cache-sim.h"
-
+#define DEBUG 0
 /*
 for caches that need to use LRU policy, have a counter per entry that keeps track of time ticks (increment when not accessed, reset to 0 when accessed)
 sort entries/vector/whatever in ascending order? or have aux function to grab LRU entry
@@ -9,10 +9,10 @@ string direct(int size, vector<trace> traces){
   int entries = size/32;
 
   vector<Block> table(size, Block(0, 0));
-  //cout << "Size of traces: " << traces.size() << " size of table: " << table.size() <<endl;
+  if(DEBUG)cout << "Size of traces: " << traces.size() << " size of table: " << table.size() <<endl;
   for(trace t: traces){
     if(t.target == 0){
-      std::cout << "0 address" << endl;
+      if(DEBUG)std::cout << "0 address" << endl;
       continue;
     }
     unsigned index = (t.target >> 5) % entries;
@@ -83,7 +83,7 @@ string set_associative(int set_size, vector<trace> traces, int env_setting = 0, 
 
   for(trace t: traces){
     if(t.target == 0){
-      std::cout << "0 address" << endl;
+      if(DEBUG)std::cout << "0 address" << endl;
       continue;
     }
     accesses++;
@@ -235,7 +235,7 @@ int cache_sim(string inputfile, string outputfile){
   //Direct Mapped inititalization
   
   vector<string> output (0);
-  std::cout << "Direct Mapped" << endl;
+  if(DEBUG)std::cout << "Direct Mapped" << endl;
   /*** DIRECT MAPPED CACHE ***/
   int dm_sizes[4] = {10, 12, 14, 15}; //1KB = 2^10, 4KB = 2^ 12, 16KB = 2^14, 32 KB = 2^15
   string l1 = "";
@@ -245,7 +245,7 @@ int cache_sim(string inputfile, string outputfile){
   } 
   output.push_back(l1);
   /**************************/
-  std::cout << "Set Associative (All Cases)"<<endl;
+  if(DEBUG)std::cout << "Set Associative (All Cases)"<<endl;
   /** SET ASSOCIATIVE CACHE **/
   string l2 = "";
   string l5 = "";
@@ -254,6 +254,7 @@ int cache_sim(string inputfile, string outputfile){
   
   int sa_ways[4] = {2, 4, 8, 16};
   for(int i = 0; i < 4; i++){
+    if(DEBUG)cout << i << ":\tways = " << sa_ways[i] << endl;
     l2.append(set_associative(sa_ways[i], traces, 0)); //Standard Set Associative
     l5.append(set_associative(sa_ways[i], traces, 1)); //SA w/ No Alloc on WM
     l6.append(set_associative(sa_ways[i], traces, 2)); //SA w/ Next Line  prefetching
@@ -269,11 +270,11 @@ int cache_sim(string inputfile, string outputfile){
   /**************************/
 
   /** FULLY ASSOCIATIVE CACHE **/  
-  std::cout << "Fully Associative LRU"<<endl;
+  if(DEBUG)std::cout << "Fully Associative LRU"<<endl;
   string l3 = "";
   l3.append(set_associative(0, traces, 0, 1));
 
-  std::cout << "Fully Associative Pseudo LRU"<<endl;
+  if(DEBUG)std::cout << "Fully Associative Pseudo LRU"<<endl;
   string l4 = "";
   l4.append(set_associative(0, traces, 0, 2));
   output.push_back(l3);

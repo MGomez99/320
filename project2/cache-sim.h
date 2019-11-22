@@ -36,18 +36,16 @@ struct Block{
 
 struct Set{
   unsigned size = 0;
-  vector<Block> * ptr;
   vector <Block> set;
   Set(unsigned s){
     size = s;
-    ptr = new vector<Block>(s, Block(0, 0, 0, 0));
-    set = *ptr;
+
+    set = vector<Block>(s, Block(0, 0, 0, 0));
     
   }
   Set(){
-    size = 0; ptr = 0; set.resize(0);
+    size = 0; set.resize(0);
   }
-  ~Set(){ delete &ptr;}
 
 };
 

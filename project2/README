@@ -1,0 +1,14 @@
+Miguel Gomez
+mgomez4
+B00685407
+
+Everything seems to be working fine. The only time I saw an error was:
+  munmap_chunk(): invalid pointer
+When running the code on a linux machine after working on windows. Removed the associated ptr from one my my structs and everything works!
+Makefile has easy_run and easy_diff options to run the 3 test inputs and diff them
+
+NOTE: USAGE
+  >make
+  >./cache-sim [inputfile].txt [outputfile.txt]
+There will be a prompt "DONE!" when finished.
+
