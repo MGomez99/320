@@ -16,7 +16,7 @@ string direct(int size, vector<trace> traces){
       continue;
     }
     unsigned index = (t.target >> 5) % entries;
-    unsigned tag = t.target >> 5+ size;
+    unsigned tag = t.target / 32+ size;
     //cout << "Target "<< t.target << " Instr: " << t.instruction <<" Index: " <<index << " Tag: " << tag<< endl;
 
     Block & currentBlock = table[index];
